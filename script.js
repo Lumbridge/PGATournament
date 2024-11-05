@@ -39,6 +39,7 @@ function loadWinners() {
             dropdown.value = "";
             saveWinner(course, "");
             updateScoreboard();
+            highlightNextCourse(); // Update highlight
         };
         courseTitleDiv.appendChild(resetButton);
 
@@ -46,7 +47,6 @@ function loadWinners() {
         dropdown.classList.add("dropdown");
         dropdown.id = `course-${index}`;
 
-        // Placeholder option
         const placeholderOption = document.createElement("option");
         placeholderOption.value = "";
         placeholderOption.textContent = "Select a player";
@@ -61,15 +61,14 @@ function loadWinners() {
             dropdown.appendChild(option);
         });
 
-        // Load saved selection if available
         if (savedWinners[course]) {
             dropdown.value = savedWinners[course];
         }
 
-        // Save selection to local storage and update scoreboard on change
         dropdown.addEventListener("change", () => {
             saveWinner(course, dropdown.value);
             updateScoreboard();
+            highlightNextCourse(); // Update highlight
         });
 
         courseDiv.appendChild(courseTitleDiv);
@@ -77,8 +76,8 @@ function loadWinners() {
         courseContainer.appendChild(courseDiv);
     });
 
-    // Initial scoreboard update
     updateScoreboard();
+    highlightNextCourse();
 }
 
 function saveWinner(course, player) {
@@ -90,22 +89,45 @@ function saveWinner(course, player) {
 function clearWinners() {
     localStorage.removeItem("golfWinners");
     alert("All winners have been cleared!");
-    location.reload(); // Reload to reset the selections
+    location.reload();
 }
 
 function updateScoreboard() {
     const savedWinners = JSON.parse(localStorage.getItem("golfWinners")) || {};
     const scores = { "AJ": 0, "Owain": 0, "Ryan": 0 };
+    let nextCourse = "All courses complete"; // Default message if all are filled
 
-    // Count the number of wins for each player, ignoring the placeholder
+    courses.some(course => {
+        if (!savedWinners[course]) {
+            nextCourse = `Next Course: ${course}`;
+            return true; // Breaks out of loop as we found the first unassigned course
+        }
+        return false;
+    });
+
     Object.values(savedWinners).forEach(winner => {
         if (scores[winner] !== undefined) {
             scores[winner]++;
         }
     });
 
-    // Update the scoreboard display
-    scoreboard.textContent = `Scores - AJ: ${scores["AJ"]} | Owain: ${scores["Owain"]} | Ryan: ${scores["Ryan"]}`;
+    scoreboard.textContent = `Scores - AJ: ${scores["AJ"]} | Owain: ${scores["Owain"]} | Ryan: ${scores["Ryan"]} | ${nextCourse}`;
+}
+
+function highlightNextCourse() {
+    const savedWinners = JSON.parse(localStorage.getItem("golfWinners")) || {};
+    let foundFirstEmptyCourse = false;
+
+    courses.forEach((course, index) => {
+        const courseDiv = document.getElementById(`course-${index}`).parentNode;
+
+        if (!savedWinners[course] && !foundFirstEmptyCourse) {
+            courseDiv.classList.add("highlight-next");
+            foundFirstEmptyCourse = true;
+        } else {
+            courseDiv.classList.remove("highlight-next");
+        }
+    });
 }
 
 function exportData() {
@@ -130,11 +152,10 @@ function handleFileSelect(event) {
         reader.onload = function(e) {
             const importedData = JSON.parse(e.target.result);
             localStorage.setItem("golfWinners", JSON.stringify(importedData));
-            location.reload(); // Reload to apply imported data
+            location.reload();
         };
         reader.readAsText(file);
     }
 }
 
-// Load winners and update scoreboard when page loads
 loadWinners();

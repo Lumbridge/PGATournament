@@ -97,3 +97,8 @@ h1 {
     font-size: 16px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
+
+.highlight-next {
+    border: 2px solid #ffeb3b;
+    background-color: #333333;
+}
