@@ -86,18 +86,6 @@ h1 {
     background-color: #c62828;
 }
 
-.scoreboard {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 10px;
-    background-color: #1e88e5;
-    color: white;
-    border-radius: 10px;
-    font-size: 16px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
 .highlight-next {
     border: 2px solid #ffeb3b;
     background-color: #333333;
@@ -128,6 +116,34 @@ h1 {
 .highlighted-button {
     background-color: #555; /* Slightly lighter color */
     color: #ffeb3b; /* Yellow text to indicate attention */
+}
+
+.scoreboard {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px;
+    background-color: #333;
+    color: white;
+    border-radius: 10px;
+    font-size: 16px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.compact-view {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 8px 12px;
+    background-color: #333;
+    color: #e0e0e0;
+    font-size: 18px;
+    text-align: center;
+    border-radius: 8px;
+    z-index: 1000;
+    max-width: 180px; /* Set an approximate width to allow line breaks */
+    overflow-wrap: break-word;
+    word-break: break-all; /* Break text if it exceeds max-width */
 }
 
 .stroke-spinner {

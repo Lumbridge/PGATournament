@@ -176,10 +176,19 @@ function clearWinners() {
     location.reload();
 }
 
+// Create a single color picker input for reuse
+const colorPicker = document.createElement("input");
+colorPicker.type = "color";
+colorPicker.style.position = "absolute";
+colorPicker.style.display = "none"; // Hide initially
+document.body.appendChild(colorPicker);
+
+// Function to update the scoreboard with color-changing ability
 function updateScoreboard() {
     const savedWinners = JSON.parse(localStorage.getItem("golfWinners")) || {};
-    const scores = { "AJ": 0, "Owain": 0, "Ryan": 0 };
-    const strokes = { "AJ": 0, "Owain": 0, "Ryan": 0 };
+
+    const scores = players.reduce((acc, player) => ({ ...acc, [player]: 0 }), {});
+    const strokes = players.reduce((acc, player) => ({ ...acc, [player]: 0 }), {});
 
     courses.forEach(course => {
         const winner = savedWinners[course];
@@ -192,14 +201,114 @@ function updateScoreboard() {
         }
     });
 
-    const scoreboardText = `
-        Scores -
-        AJ: ${scores["AJ"]} Wins | ${strokes["AJ"]} Strokes
-        Owain: ${scores["Owain"]} Wins | ${strokes["Owain"]} Strokes
-        Ryan: ${scores["Ryan"]} Wins | ${strokes["Ryan"]} Strokes
-    `;
+    scoreboard.innerHTML = ""; // Clear existing scoreboard content
 
-    scoreboard.textContent = scoreboardText.trim();
+    players.forEach(player => {
+        const playerScore = document.createElement("div");
+        playerScore.className = "player-score";
+        playerScore.innerHTML = `${player}: ${scores[player]} Wins (${strokes[player]} Strokes)`;
+        playerScore.style.color = playerColors[player];
+        playerScore.style.cursor = "pointer"; // Makes it clear it's clickable
+
+        // Add event listener to change color on click
+        playerScore.addEventListener("click", (event) => {
+            colorPicker.value = playerColors[player]; // Set current color
+            colorPicker.style.left = `${event.clientX}px`; // Set position based on click
+            colorPicker.style.top = `${event.clientY}px`;
+            colorPicker.style.display = "block"; // Show color picker
+
+            // Update color on input change
+            colorPicker.oninput = () => {
+                const newColor = colorPicker.value;
+                savePlayerColor(player, newColor);
+                playerScore.style.color = newColor;
+                updateCourseHighlighting(); // Update course names with the new color
+                updateCompactView(); // Update compact display with the new color
+            };
+
+            // Hide color picker on change
+            colorPicker.onchange = () => {
+                colorPicker.style.display = "none";
+            };
+        });
+
+        scoreboard.appendChild(playerScore);
+    });
+
+    updateCourseHighlighting();
+    updateCompactView(); // Initial call to ensure it's updated on load
+}
+
+// Hide color picker when clicking outside of it and playerScore elements
+document.addEventListener("click", (event) => {
+    if (event.target !== colorPicker && event.target.className !== "player-score") { // Ensure not hiding on player name click
+        colorPicker.style.display = "none";
+    }
+});
+
+// Function to highlight course name based on the winner's color
+function updateCourseHighlighting() {
+    const savedWinners = JSON.parse(localStorage.getItem("golfWinners")) || {};
+
+    courses.forEach((course, index) => {
+        const courseTitle = document.querySelector(`#course-${index}`).parentNode.querySelector("h3");
+        const winner = savedWinners[course];
+
+        if (winner) {
+            courseTitle.style.color = playerColors[winner];
+        } else {
+            courseTitle.style.color = ""; // Reset color if no winner
+        }
+    });
+}
+
+// Function to update the compact view of course results
+function updateCompactView() {
+    const savedWinners = JSON.parse(localStorage.getItem("golfWinners")) || {};
+    const compactView = document.getElementById("compactView");
+    compactView.innerHTML = ""; // Clear existing content
+
+    // Iterate over courses and append color-coded initials
+    courses.forEach(course => {
+        const winner = savedWinners[course];
+        const playerInitial = winner ? winner[0] : "-";
+
+        const span = document.createElement("span");
+        span.textContent = playerInitial;
+
+        if (winner) {
+            span.style.color = playerColors[winner]; // Apply the player's color
+        } else {
+            span.style.color = "#e0e0e0"; // Default color for no winner
+        }
+
+        compactView.appendChild(span);
+    });
+}
+
+// Function to generate a random color
+function getRandomColor() {
+    return `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
+}
+
+// Function to initialize player colors and save to localStorage if not already saved
+function initializePlayerColors() {
+    let playerColors = JSON.parse(localStorage.getItem("playerColors")) || {};
+    players.forEach(player => {
+        if (!playerColors[player]) {
+            playerColors[player] = getRandomColor();
+        }
+    });
+    localStorage.setItem("playerColors", JSON.stringify(playerColors));
+    return playerColors;
+}
+
+let playerColors = initializePlayerColors(); // Load or initialize player colors
+
+// Function to save updated color to localStorage
+function savePlayerColor(player, color) {
+    playerColors[player] = color;
+    localStorage.setItem("playerColors", JSON.stringify(playerColors));
 }
 
 function highlightNextCourse() {
