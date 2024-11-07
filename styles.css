@@ -102,3 +102,39 @@ h1 {
     border: 2px solid #ffeb3b;
     background-color: #333333;
 }
+
+.collapse-button {
+    font-size: 12px;
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin-top: 5px;
+}
+
+.collapse-button:hover {
+    background-color: #555;
+}
+
+.stroke-tracker {
+    display: none; /* Hidden by default */
+    margin-top: 10px;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.highlighted-button {
+    background-color: #555; /* Slightly lighter color */
+    color: #ffeb3b; /* Yellow text to indicate attention */
+}
+
+.stroke-spinner {
+    width: 60px;
+    padding: 2px;
+}
+
+.scoreboard {
+    white-space: pre-line; /* Allows newline in scoreboard text */
+}
