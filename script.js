@@ -14,7 +14,7 @@ const courses = [
     "TPC Deere Run", "TPC Boston"
 ];
 
-const players = ["AJ", "Owain", "Ryan"];
+let players = JSON.parse(localStorage.getItem("players")) || ["AJ", "Owain", "Ryan"];
 const courseContainer = document.getElementById("courses");
 const scoreboard = document.getElementById("scoreboard");
 const playerStrokes = JSON.parse(localStorage.getItem("playerStrokes")) || {};
@@ -140,6 +140,38 @@ function loadWinners() {
 
     updateScoreboard();
     highlightNextCourse();
+}
+
+function savePlayers() {
+    localStorage.setItem("players", JSON.stringify(players));
+}
+
+function addPlayerFromInput() {
+    const playerName = document.getElementById("newPlayerName").value.trim();
+    addPlayer(playerName);
+    document.getElementById("newPlayerName").value = ""; // Clear input field
+}
+
+function removePlayerFromInput() {
+    const playerName = document.getElementById("newPlayerName").value.trim();
+    removePlayer(playerName);
+    document.getElementById("newPlayerName").value = ""; // Clear input field
+}
+
+function addPlayer(playerName) {
+    if (playerName && !players.includes(playerName)) {
+        players.push(playerName);
+        savePlayers();
+        initializePlayerColors(); // Update player colors for the new player
+        loadWinners(); // Reload the scoreboard with the updated players list
+    }
+}
+
+function removePlayer(playerName) {
+    players = players.filter(player => player !== playerName);
+    savePlayers();
+    initializePlayerColors(); // Update player colors after removal
+    loadWinners(); // Reload the scoreboard with the updated players list
 }
 
 // Function to highlight button if all strokes are zero

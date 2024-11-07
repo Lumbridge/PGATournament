@@ -16,6 +16,12 @@
     <button class="export-button" onclick="exportData()">Export Data</button>
     <button class="import-button" onclick="importData()">Import Data</button>
     <button class="clear-button" onclick="clearWinners()">Reset All Courses</button>
+
+    <div class="player-management">
+        <label for="newPlayerName">Add/remove player </label><input type="text" id="newPlayerName" placeholder="Enter player name" />
+        <button onclick="addPlayerFromInput()">Add Player</button>
+        <button onclick="removePlayerFromInput()">Remove Player</button>
+    </div>
 </div>
 
 <div id="compactView" class="compact-view"></div>
