@@ -360,12 +360,20 @@ function highlightNextCourse() {
 }
 
 function exportData() {
-    const savedWinners = localStorage.getItem("golfWinners") || "{}";
-    const blob = new Blob([savedWinners], { type: "application/json" });
+    const savedWinners = JSON.parse(localStorage.getItem("golfWinners")) || {};
+    const playerStrokesData = JSON.parse(localStorage.getItem("playerStrokes")) || {};
+
+    // Combine winners and strokes data
+    const exportData = {
+        winners: savedWinners,
+        strokes: playerStrokesData,
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "golfWinners.json";
+    a.download = "golfTournamentData.json";
     a.click();
     URL.revokeObjectURL(url);
 }
@@ -387,4 +395,148 @@ function handleFileSelect(event) {
     }
 }
 
+// Render the strokes chart for played courses
+function renderStrokesChart() {
+    const playerStrokesData = JSON.parse(localStorage.getItem("playerStrokes")) || {};
+
+    // Filter courses to include only played courses (at least one stroke recorded)
+    const playedCourses = courses.filter(course => {
+        return playerStrokesData[course];
+    });
+
+    // Prepare data for the chart
+    const datasets = players.map(player => ({
+        label: `${player} Total Strokes`,
+        data: playedCourses.map(course => playerStrokesData[course]?.[player] || null),
+        backgroundColor: playerColors[player],
+        borderColor: playerColors[player],
+        borderWidth: 2,
+        fill: false
+    }));
+
+    // Create the chart
+    const strokesChartCtx = document.getElementById("strokesChart").getContext("2d");
+    new Chart(strokesChartCtx, {
+        type: "line",
+        data: {
+            labels: playedCourses, // Only include played courses
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true },
+                x: { ticks: { autoSkip: false } }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top"
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            if (context.raw === null) return `${context.dataset.label}: No Data`;
+                            return `${context.dataset.label}: ${context.raw} Strokes`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Render the wins chart showing cumulative wins over the tournament (played courses only)
+function renderWinsChart() {
+    const savedWinners = JSON.parse(localStorage.getItem("golfWinners")) || {};
+    const playerStrokesData = JSON.parse(localStorage.getItem("playerStrokes")) || {};
+
+    // Filter courses to include only played courses (at least one stroke recorded)
+    const playedCourses = courses.filter(course => {
+        return playerStrokesData[course];
+    });
+
+    // Calculate cumulative wins for each player across the tournament
+    const cumulativeWins = players.reduce((acc, player) => ({ ...acc, [player]: 0 }), {});
+    const dataPoints = []; // Array to store data points for the chart
+
+    playedCourses.forEach(course => {
+        const winner = savedWinners[course];
+
+        // Update cumulative wins for the winner
+        if (winner) {
+            cumulativeWins[winner]++;
+        }
+
+        // Add data point for each course (x-axis: course name, y-axis: cumulative wins)
+        dataPoints.push({
+            course,
+            cumulativeWins: { ...cumulativeWins }, // Snapshot of cumulative wins
+        });
+    });
+
+    // Prepare datasets for each player
+    const datasets = players.map(player => ({
+        label: player,
+        data: dataPoints.map(point => ({
+            x: point.course,
+            y: point.cumulativeWins[player],
+        })),
+        backgroundColor: playerColors[player],
+        borderColor: playerColors[player],
+        borderWidth: 2,
+        tension: 0.3, // Smooth the line
+        fill: false,
+    }));
+
+    // Create the chart
+    const winsChartCtx = document.getElementById("winsChart").getContext("2d");
+    new Chart(winsChartCtx, {
+        type: "line",
+        data: {
+            datasets: datasets,
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: "category",
+                    labels: playedCourses, // Use only played courses as labels
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                    },
+                },
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: context => context[0].label, // Show course name
+                        label: context => {
+                            const player = context.dataset.label;
+                            const wins = context.raw.y;
+                            return `${player}: ${wins} Win${wins !== 1 ? "s" : ""}`;
+                        },
+                    },
+                },
+                legend: {
+                    display: true,
+                    position: "top",
+                },
+            },
+        },
+    });
+}
+
+// Call renderWinsChart after loading data
 loadWinners();
+renderStrokesChart();
+renderWinsChart();
+
+
+// Call renderWinsChart after loading data
+loadWinners();
+renderStrokesChart();
+renderWinsChart();
